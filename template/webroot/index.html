@@ -17,6 +17,12 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
       </button>
     </header>
+    <nav class="tabs" aria-label="模块页面">
+      <button type="button" data-page="overview" aria-pressed="true">概览</button>
+      <button type="button" data-page="settings" aria-pressed="false">配置</button>
+      <button type="button" data-page="diagnostics" aria-pressed="false">诊断</button>
+    </nav>
+    <div id="page-overview">
     <section class="hero" aria-labelledby="status-title">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-3 7-10V5l-7-3-7 3v7c0 7 7 10 7 10Z"/><path d="m9 12 2 2 4-4"/></svg>
       <h2 id="status-title">运行状态</h2>
@@ -34,6 +40,8 @@
         <button type="button" class="filled" data-restart="all" disabled>重启全部</button>
       </div>
     </section>
+    </div>
+    <div id="page-settings" hidden>
     <section aria-labelledby="files-title">
       <h2 id="files-title" class="section-title">配置文件</h2>
       <div class="group">
@@ -42,6 +50,39 @@
       </div>
       <p class="path"><code>/data/misc/keystore/omk/</code></p>
     </section>
+    <section aria-labelledby="logging-title">
+      <h2 id="logging-title" class="section-title">日志级别</h2>
+      <div class="group">
+        <label class="row"><span><strong>KeyMint</strong><small>保存后重启 KeyMint 生效</small></span><select id="level-keymint" disabled aria-label="KeyMint 日志级别"></select></label>
+        <label class="row"><span><strong>Injector</strong><small>保存后自动生效</small></span><select id="level-injector" disabled aria-label="Injector 日志级别"></select></label>
+      </div>
+      <div class="actions"><button type="button" id="save-levels" class="filled" disabled>保存更改</button></div>
+      <p id="settings-status" class="path" role="status"></p>
+    </section>
+    </div>
+    <div id="page-diagnostics" hidden>
+      <section aria-labelledby="device-title">
+        <h2 id="device-title" class="section-title">设备环境</h2>
+        <div class="group">
+          <div class="row"><span>Android</span><span id="device-android">—</span></div>
+          <div class="row"><span>架构</span><span id="device-abi">—</span></div>
+          <div class="row"><span>模块版本</span><span id="device-version">—</span></div>
+        </div>
+      </section>
+      <section aria-labelledby="log-title">
+        <h2 id="log-title" class="section-title">服务日志</h2>
+        <div class="actions">
+          <select id="log-source" aria-label="日志来源">
+            <option value="keymint">KeyMint</option>
+            <option value="injector">Injector</option>
+          </select>
+          <button id="load-log" type="button">刷新日志</button>
+        </div>
+        <label class="filter"><span>搜索日志</span><input id="log-filter" type="search" placeholder="关键词"></label>
+        <p id="log-status" class="path" role="status"></p>
+        <pre id="log-output" tabindex="0"></pre>
+      </section>
+    </div>
     <p id="notice" role="status" hidden></p>
   </main>
   <dialog id="confirm" aria-labelledby="confirm-title">

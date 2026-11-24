@@ -674,3 +674,8 @@ Open the module's WebUI from the KernelSU module list to check the two
 supervisors and the presence of both TOML files. The restart buttons submit
 the existing restart requests after confirmation. Supervisor state reflects
 the wrapper processes and does not verify the result of a Keystore request.
+
+The Settings page edits existing `[main].log_level` entries. KeyMint requires
+a restart, while the injector reloads its level automatically. The Diagnostics
+page shows the Android version, ABI, and module version, and can search the
+latest local KeyMint and injector log lines.

@@ -122,3 +122,170 @@ confirm.addEventListener("close", async () => {
 });
 
 loadStatus();
+
+const byId = id => document.getElementById(id);
+const tabs = [...document.querySelectorAll("[data-page]")];
+const levels = ["off", "error", "warn", "info", "debug", "trace"];
+const levelFields = [
+  { file: "config.toml", select: byId("level-keymint") },
+  { file: "injector.toml", select: byId("level-injector") }
+];
+const saveLevels = byId("save-levels");
+const settingsStatus = byId("settings-status");
+const logSource = byId("log-source");
+const logFilter = byId("log-filter");
+const logStatus = byId("log-status");
+const logOutput = byId("log-output");
+let logLines = [];
+let saving = false;
+
+const logLevelAwk = `/^[[:space:]]*\\[/ {
+  main = ($0 ~ /^[[:space:]]*\\[main\\][[:space:]]*(#.*)?$/)
+}
+main && /^[[:space:]]*log_level[[:space:]]*=/ {
+  if ($0 !~ /^[[:space:]]*log_level[[:space:]]*=[[:space:]]*"(off|error|warn|warning|info|debug|trace)"[[:space:]]*(#.*)?$/) exit 3
+  value = $0
+  sub(/^[^"]*"/, "", value)
+  sub(/".*$/, "", value)
+  if (new != "") sub(/"[^"]+"/, "\\"" new "\\"")
+  hits++
+}
+new != "" { print }
+END {
+  if (hits != 1) exit 3
+  if (new == "") print value
+}`;
+
+for (const field of levelFields) {
+  field.select.add(new Option("不可用", ""));
+  for (const level of levels) field.select.add(new Option(level, level));
+  field.select.addEventListener("change", updateSaveButton);
+}
+
+function updateSaveButton() {
+  saveLevels.disabled = saving || !levelFields.some(field => field.original && field.select.value !== field.original);
+}
+
+async function loadLevels() {
+  if (saving) return;
+  settingsStatus.textContent = "正在读取配置…";
+  await Promise.all(levelFields.map(async field => {
+    field.select.disabled = true;
+    field.original = "";
+    field.select.value = "";
+    try {
+      const output = await exec(`awk '${logLevelAwk}' '${configDir}/${field.file}'`);
+      const value = output.trim();
+      field.original = value === "warning" ? "warn" : value;
+      if (levels.includes(field.original)) {
+        field.select.value = field.original;
+        field.select.disabled = false;
+      }
+    } catch {
+      field.original = "";
+    }
+  }));
+  settingsStatus.textContent = levelFields.every(field => field.original) ? "" : "部分日志级别无法读取，请检查配置文件。";
+  updateSaveButton();
+}
+
+async function saveLevel(field, value) {
+  const path = `${configDir}/${field.file}`;
+  await exec(`set -e
+file='${path}'
+[ -f "$file" ] && [ ! -L "$file" ]
+before=$(sha256sum "$file")
+current=$(awk '${logLevelAwk}' "$file")
+[ "$current" != warning ] || current=warn
+[ "$current" = '${field.original}' ]
+temp=$(mktemp "${configDir}/.webui.XXXXXX")
+trap 'rm -f "$temp"' EXIT
+cp -p "$file" "$temp"
+awk -v new='${value}' '${logLevelAwk}' "$file" > "$temp"
+restorecon "$temp"
+[ "$(sha256sum "$file")" = "$before" ]
+mv -f "$temp" "$file"`);
+}
+
+saveLevels.addEventListener("click", async () => {
+  if (saving) return;
+  const changes = levelFields.filter(field => field.original && levels.includes(field.select.value) && field.select.value !== field.original);
+  if (!changes.length) return;
+  saving = true;
+  updateSaveButton();
+  levelFields.forEach(field => { field.select.disabled = true; });
+  const results = await Promise.allSettled(changes.map(field => saveLevel(field, field.select.value)));
+  saving = false;
+  await loadLevels();
+  const failed = changes.filter((field, index) => results[index].status === "rejected").map(field => field.file);
+  const restart = changes.some((field, index) => field.file === "config.toml" && results[index].status === "fulfilled");
+  settingsStatus.textContent = [
+    failed.length ? `保存失败：${failed.join("、")}。` : "已保存日志级别。",
+    restart ? "重启 KeyMint 后生效。" : ""
+  ].filter(Boolean).join(" ");
+});
+
+function renderLogs() {
+  const query = logFilter.value.trim().toLowerCase();
+  const lines = logLines.filter(line => line.toLowerCase().includes(query));
+  logOutput.textContent = lines.join("\n");
+  logStatus.textContent = logLines.length ? `显示 ${lines.length} / ${logLines.length} 行` : "暂无日志";
+}
+
+async function loadLogs() {
+  const button = byId("load-log");
+  if (button.disabled) return;
+  const source = logSource.value;
+  if (!["keymint", "injector"].includes(source)) return;
+  button.disabled = true;
+  logSource.disabled = true;
+  logOutput.textContent = "";
+  logLines = [];
+  logStatus.textContent = "正在读取日志…";
+  try {
+    const output = await exec(`file='${configDir}/logs/${source}.log'; [ -r "$file" ] && tail -n 150 "$file" | tail -c 65536`);
+    logLines = output.trimEnd() ? output.trimEnd().split("\n") : [];
+    renderLogs();
+  } catch {
+    logStatus.textContent = "读取日志失败，请从 KernelSU 打开并重试。";
+  } finally {
+    button.disabled = false;
+    logSource.disabled = false;
+  }
+}
+
+async function loadDevice() {
+  try {
+    const output = await exec(`getprop ro.build.version.release
+getprop ro.product.cpu.abi
+sed -n 's/^version=//p' '${moduleDir}/module.prop'`);
+    const values = output.trimEnd().split("\n");
+    ["device-android", "device-abi", "device-version"].forEach((id, index) => {
+      byId(id).textContent = values[index]?.trim() || "—";
+    });
+  } catch {
+    ["device-android", "device-abi", "device-version"].forEach(id => { byId(id).textContent = "—"; });
+  }
+}
+
+for (const tab of tabs) {
+  tab.addEventListener("click", () => {
+    const page = tab.dataset.page;
+    const wasHidden = byId(`page-${page}`).hidden;
+    for (const item of tabs) {
+      const selected = item === tab;
+      item.setAttribute("aria-pressed", String(selected));
+      byId(`page-${item.dataset.page}`).hidden = !selected;
+    }
+    if (!wasHidden) return;
+    if (page === "settings" && !levelFields.some(field => field.original)) loadLevels();
+    if (page === "diagnostics") {
+      loadDevice();
+      loadLogs();
+    }
+  });
+}
+
+byId("load-log").addEventListener("click", loadLogs);
+logSource.addEventListener("change", loadLogs);
+logFilter.addEventListener("input", renderLogs);

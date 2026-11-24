@@ -78,3 +78,31 @@ form { justify-content: flex-end; }
 #notice { margin-top: 16px; border-radius: 12px; background: var(--container); padding: 10px 14px; }
 @keyframes enter { from { opacity: 0; transform: translateY(12px) scale(.98); } }
 @media (prefers-reduced-motion: reduce) { *, dialog[open] { animation: none; transition: none; } }
+
+.tabs { display: flex; gap: 4px; border-radius: 22px; padding: 4px; margin-bottom: 16px; background: var(--container); }
+.tabs button { flex: 1; border: 0; }
+.tabs button[aria-pressed="true"] { color: var(--on-container); background: var(--primary-container); }
+select, input {
+  min-height: 44px;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  padding: 0 10px;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  font-size: .85rem;
+}
+select:disabled { opacity: .55; }
+.filter { display: grid; gap: 6px; margin-top: 12px; color: var(--muted); font-size: .85rem; }
+#log-output {
+  min-height: 100px;
+  max-height: 360px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--container);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: .78rem/1.55 monospace;
+}
