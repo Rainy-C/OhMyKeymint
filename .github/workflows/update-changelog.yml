@@ -6,6 +6,7 @@ on:
 
 jobs:
   update-changelog:
+    if: github.repository == 'qwq233/OhMyKeymint'
     runs-on: ubuntu-latest
     permissions:
       contents: write

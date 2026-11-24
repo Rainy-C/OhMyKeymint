@@ -1,7 +1,7 @@
 # shellcheck disable=SC2034
 SKIPUNZIP=1
 
-SONAME="Oh My Keymint"
+SONAME="SnowMint"
 SUPPORTED_ABIS="arm64 x64"
 MIN_SDK=33
 

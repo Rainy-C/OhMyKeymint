@@ -150,11 +150,12 @@ jobs:
     needs:
       - build-boringssl
     permissions:
+      contents: write
       id-token: write
       attestations: write
     strategy:
       matrix:
-        build-type: [debug, release]
+        build-type: [release]
     
     steps:
     - name: Checkout repository
@@ -240,3 +241,30 @@ jobs:
       with:
         subject-name: ${{ steps.prepareArtifact.outputs.releaseName }}
         subject-digest: sha256:${{ steps.upload.outputs.artifact-digest }}
+
+    - name: Publish fork release
+      if: github.repository == 'Rainy-C/OhMyKeymint' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        packages=(target/OhMyKeymint-release-arm64-v8a-*.zip)
+        test "${#packages[@]}" -eq 1
+        package=${packages[0]}
+        name=${package##*/}
+        properties=$(unzip -p "$package" module.prop)
+        version=$(sed -n 's/^version=//p' <<< "$properties")
+        code=$(sed -n 's/^versionCode=//p' <<< "$properties")
+        tag="snowmint-$version"
+        base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+        if gh release view "$tag" >/dev/null 2>&1; then
+          exit 0
+        fi
+        printf '%s\n' '新增中文 Material Design 3 WebUI，支持查看守护进程、配置文件状态和重启服务。' > "$RUNNER_TEMP/changelog.md"
+        jq -n --arg version "$version" --argjson versionCode "$code" \
+          --arg zipUrl "$base/releases/download/$tag/$name" \
+          --arg changelog "$base/releases/download/$tag/changelog.md" \
+          '{version: $version, versionCode: $versionCode, zipUrl: $zipUrl, changelog: $changelog}' > "$RUNNER_TEMP/update.json"
+        gh release create "$tag" "$package" "$RUNNER_TEMP/update.json" "$RUNNER_TEMP/changelog.md" \
+          --target "$GITHUB_SHA" --title "SnowMint $version" --notes-file "$RUNNER_TEMP/changelog.md" --latest

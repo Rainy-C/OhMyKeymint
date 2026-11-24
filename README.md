@@ -1,4 +1,6 @@
-# Oh My Keymint
+# SnowMint
+
+SnowMint is maintained by 临江踏雪 and is derived from [Oh My Keymint by James Clef](https://github.com/qwq233/OhMyKeymint).
 
 [![Telegram](https://img.shields.io/static/v1?label=Telegram&message=@OhMyKeymint&color=0088cc)](https://t.me/OhMyKeymint)  [![CI Build](https://github.com/qwq233/OhMyKeymint/actions/workflows/ci.yml/badge.svg)](https://github.com/qwq233/OhMyKeymint/actions/workflows/ci.yml)
 
