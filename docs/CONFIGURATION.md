@@ -667,3 +667,10 @@ is needed after a route change. A syntax error, an unknown field, or an
 unsupported future `version` leaves the last valid runtime configuration
 active; if present at injector startup, it leaves OMK request routing disabled
 until the file is corrected.
+
+## KernelSU WebUI
+
+Open the module's WebUI from the KernelSU module list to check the two
+supervisors and the presence of both TOML files. The restart buttons submit
+the existing restart requests after confirmation. Supervisor state reflects
+the wrapper processes and does not verify the result of a Keystore request.

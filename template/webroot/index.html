@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Oh My Keymint</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Oh My Keymint</h1>
+      <button id="refresh" class="icon-button" aria-label="刷新状态" title="刷新状态">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+      </button>
+    </header>
+    <section class="hero" aria-labelledby="status-title">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-3 7-10V5l-7-3-7 3v7c0 7 7 10 7 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <h2 id="status-title">运行状态</h2>
+      <p id="summary" aria-live="polite">正在检查…</p>
+    </section>
+    <section aria-labelledby="services-title">
+      <h2 id="services-title" class="section-title">后台服务</h2>
+      <div class="group">
+        <div class="row"><div><strong>KeyMint</strong><small>密钥服务守护进程</small></div><span class="chip" id="keymint">—</span></div>
+        <div class="row"><div><strong>Injector</strong><small>注入器守护进程</small></div><span class="chip" id="injector">—</span></div>
+      </div>
+      <div class="actions">
+        <button type="button" data-restart="keymint" disabled>重启 KeyMint</button>
+        <button type="button" data-restart="injector" disabled>重启 Injector</button>
+        <button type="button" class="filled" data-restart="all" disabled>重启全部</button>
+      </div>
+    </section>
+    <section aria-labelledby="files-title">
+      <h2 id="files-title" class="section-title">配置文件</h2>
+      <div class="group">
+        <div class="row"><code>config.toml</code><span class="chip" id="config">—</span></div>
+        <div class="row"><code>injector.toml</code><span class="chip" id="settings">—</span></div>
+      </div>
+      <p class="path"><code>/data/misc/keystore/omk/</code></p>
+    </section>
+    <p id="notice" role="status" hidden></p>
+  </main>
+  <dialog id="confirm" aria-labelledby="confirm-title">
+    <h2 id="confirm-title"></h2>
+    <p>重启期间，正在进行的密钥操作可能中断。</p>
+    <form method="dialog">
+      <button value="cancel" autofocus>取消</button>
+      <button value="restart" class="filled">确认重启</button>
+    </form>
+  </dialog>
+</body>
+</html>
